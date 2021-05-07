@@ -31,6 +31,8 @@ date_list3=date_list2
 
 date_list3=date_list2
 
+
+#converting all 4 digit years into 2 digits
 for i in range(0,len(date_list2)):
     try: 
         if int(date_list2[i][2]) >  100:
@@ -40,8 +42,10 @@ for i in range(0,len(date_list2)):
     except:
         pass
 
+#renaming the columns to avoid confusion
 dfdate = pd.DataFrame(date_list3,columns=["M","D","Y"])
 
+#if there is a monthname text in day column, take it and convert it to month number and put it into correct position:
 for i in range(0,len(dfdate)):
 
     try:
@@ -84,7 +88,7 @@ for i in range(0,len(dfdate)):
     except: 
         pass
 
-    
+#There are some text Monthnames in Month column, convert it into digits    
 for i in range(0,len(dfdate)):
 
     
@@ -113,6 +117,7 @@ for i in range(0,len(dfdate)):
     elif(re.match(r'Dec*',dfdate["M"][i])):
         dfdate["M"][i]="12"
 
+#If there is "," in the end of day digits, remove it:
 for i in range(0,len(dfdate)):
     try: 
         if(re.match(r'\d\d?,',dfdate["D"][i])):
@@ -122,38 +127,45 @@ for i in range(0,len(dfdate)):
 
 dfdate2=dfdate
 
+#If month and year colums are both None, put the year data inside Month column into Year column and set month and day as "1"
 for i in range(0,len(dfdate2)):
     if dfdate2["Y"][i]==None and dfdate2["D"][i]==None :
         dfdate2["Y"][i]=dfdate2["M"][i]
         dfdate2["D"][i]="1"
         dfdate2["M"][i]="1"
-
+#If the year column is None but we have the year date in day column then put it into correct place and set day data as 1. Month data is ccorrect leave it as it is.
 for i in range(0,len(dfdate2)):
     if dfdate2["Y"][i]==None:
         dfdate2["Y"][i]=dfdate2["D"][i]
         #dfdate2["D"]="1"
         #dfdate2["Y"][i]=dfdate2["Y"][i][-2:]
-        
+#at this point we have some columns where we have copied year data into it's column but left the same date in day's column as it is. now let's find them and fix them.         
 for i in range(0,len(dfdate2)):
     if dfdate2["Y"][i]==dfdate2["Y"][i] and len(dfdate2["Y"][i])==4:
         dfdate2["D"][i]="1"
         
-        
+#remove all 4 digits year data once more       
 for i in range(0,len(dfdate2)):
     try: 
         if int(dfdate2["Y"][i]) >  99:
             dfdate2["Y"][i] = dfdate2["Y"][i][-2:]
     except:
         pass
-    
+
+#merge all month/day/year data into a new data frame column named "date_column"
 dfdate2['date_column'] = dfdate2.apply(lambda row: row.M +"/"+ row.D+"/" + row.Y, axis=1)   
 
+#take the original index data as a column before sorting.
 dfdate2['index1'] = dfdate2.index
 
+#adjust the date data into a sortable format
 dfdate2['date_column'] =pd.to_datetime(dfdate2.date_column)
 
+#sort it
 dfdate4=dfdate2.sort_values(by=['date_column'])
 
+make it a list of only the index column of sorted data
 latest_list = list(dfdate4['index1'])
 
+#This is important! Return the data back as PANDAS SERIES! not as a dataframe!
 df_final = pd.Series(latest_list)
